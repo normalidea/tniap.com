@@ -8,20 +8,24 @@ body {
     font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
     background: #c0c0c0;
     padding: 10px;
-    overflow: hidden;
+    overflow: auto;
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 .app-container {
     display: flex;
-    height: 100vh;
+    min-height: calc(100vh - 20px);
+    height: calc(100vh - 20px);
     gap: 10px;
     max-width: 1400px;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .toolbar {
     background: #c0c0c0;
-    border: 2px outset #c0c0c0;
+    border: 2px solid #808080;
     padding: 10px;
     width: 220px;
     min-width: 220px;
@@ -34,7 +38,7 @@ body {
 }
 
 .tool-group {
-    border: 1px inset #c0c0c0;
+    border: 1px solid #808080;
     padding: 8px;
     background: #c0c0c0;
 }
@@ -54,7 +58,7 @@ body {
 
 .tool-btn {
     background: #c0c0c0;
-    border: 2px outset #c0c0c0;
+    border: 2px solid #808080;
     padding: 8px;
     cursor: pointer;
     font-size: 16px;
@@ -72,12 +76,12 @@ body {
 }
 
 .tool-btn:active {
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     background: #a0a0a0;
 }
 
 .tool-btn.active {
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     background: #a0a0a0;
 }
 
@@ -105,7 +109,7 @@ body {
 #colorPicker {
     width: 100%;
     height: 40px;
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     cursor: pointer;
 }
 
@@ -114,19 +118,23 @@ body {
     align-items: center;
     gap: 5px;
     margin-bottom: 5px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .zoom-btn {
     background: #c0c0c0;
-    border: 2px outset #c0c0c0;
-    padding: 4px 8px;
+    border: 2px solid #808080;
+    padding: 2px 4px;
     cursor: pointer;
-    font-size: 16px;
-    min-width: 30px;
-    height: 30px;
+    font-size: 14px;
+    min-width: 24px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .zoom-btn:hover {
@@ -134,17 +142,18 @@ body {
 }
 
 .zoom-btn:active {
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     background: #a0a0a0;
 }
 
 .zoom-btn .icon {
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
 }
 
 #zoomSlider {
     flex: 1;
+    min-width: 0;
 }
 
 #zoomDisplay {
@@ -159,7 +168,7 @@ body {
     padding: 8px;
     margin: 3px 0;
     background: #c0c0c0;
-    border: 2px outset #c0c0c0;
+    border: 2px solid #808080;
     cursor: pointer;
     font-size: 11px;
     font-weight: bold;
@@ -170,20 +179,22 @@ body {
 }
 
 .action-btn:active {
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     background: #a0a0a0;
 }
 
 .canvas-container {
     flex: 1;
     background: #c0c0c0;
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: auto;
     position: relative;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .canvas-wrapper {
@@ -191,6 +202,8 @@ body {
     display: inline-block;
     transform-origin: center center;
     visibility: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 .canvas-wrapper.ready {
@@ -205,8 +218,8 @@ body {
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
     display: block;
-    width: 100%;
-    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 .cursor-indicator {
@@ -281,7 +294,7 @@ body {
 
 .modal-content {
     background: #c0c0c0;
-    border: 2px outset #c0c0c0;
+    border: 2px solid #808080;
     min-width: 300px;
     max-width: 400px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
@@ -317,12 +330,12 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    border-top: 1px inset #c0c0c0;
+    border-top: 1px solid #808080;
 }
 
 .modal-btn {
     background: #c0c0c0;
-    border: 2px outset #c0c0c0;
+    border: 2px solid #808080;
     padding: 4px 16px;
     cursor: pointer;
     font-size: 11px;
@@ -335,7 +348,7 @@ body {
 }
 
 .modal-btn:active {
-    border: 2px inset #c0c0c0;
+    border: 2px solid #808080;
     background: #a0a0a0;
 }
 
