@@ -103,13 +103,22 @@ function loadFromLocalStorage() {
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // Update history with loaded canvas
+                // Replace the initial blank state with the loaded canvas
+                // Clear history and add loaded canvas as the first state
+                history = [];
+                historyIndex = -1;
                 saveState();
             };
             img.onerror = () => {
                 console.warn('Failed to load canvas image from localStorage');
             };
             img.src = savedCanvas;
+        } else {
+            // No saved canvas - save the initial blank state as the first history entry
+            // Make sure history is clean first
+            if (history.length === 0) {
+                saveState();
+            }
         }
     } catch (e) {
         console.warn('Failed to load from localStorage:', e);
@@ -121,10 +130,11 @@ let history = [];
 let historyIndex = -1;
 const MAX_HISTORY = 50;
 
-// Save initial blank canvas state after first resize
-saveState();
-
 // Load saved state from localStorage after canvas is ready
+// loadFromLocalStorage will save the initial state (blank or loaded)
+// We clear history here to ensure a clean start
+history = [];
+historyIndex = -1;
 setTimeout(() => {
     loadFromLocalStorage();
 }, 100);
@@ -138,6 +148,29 @@ function saveState() {
     
     // Save current canvas state
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // Don't save if it's identical to the current state at historyIndex (prevents duplicate states)
+    // After slicing future states above, historyIndex should point to the last state
+    if (history.length > 0 && historyIndex >= 0) {
+        const currentState = history[historyIndex];
+        if (currentState && 
+            currentState.width === imageData.width && 
+            currentState.height === imageData.height) {
+            // Compare pixel data
+            let isIdentical = true;
+            for (let i = 0; i < imageData.data.length; i++) {
+                if (currentState.data[i] !== imageData.data[i]) {
+                    isIdentical = false;
+                    break;
+                }
+            }
+            if (isIdentical) {
+                console.log('State identical to current, skipping save');
+                return;
+            }
+        }
+    }
+    
     history.push(imageData);
     historyIndex = history.length - 1; // Always point to the last state
     
@@ -165,6 +198,8 @@ function undo() {
         historyIndex--;
         restoreState();
         console.log('Undone, new historyIndex:', historyIndex);
+        // Save current state to localStorage after undo
+        saveToLocalStorage();
     } else {
         console.log('Cannot undo - already at beginning');
     }
@@ -176,6 +211,8 @@ function redo() {
         historyIndex++;
         restoreState();
         console.log('Redone, new historyIndex:', historyIndex);
+        // Save current state to localStorage after redo
+        saveToLocalStorage();
     } else {
         console.log('Cannot redo - already at end');
     }
@@ -677,14 +714,14 @@ canvas.addEventListener('mousedown', (e) => {
     lastX = startX;
     lastY = startY;
     
-    // Save canvas state for shape preview
+    // Save canvas state for shape preview (we'll use this for preview, but don't save to history yet)
     if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
         shapePreviewImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        saveState(); // Save state before starting shape
+        // Don't save to history here - we'll save after the shape is complete on mouseup
     }
     
     if (currentTool === 'fill') {
-        // Save state before fill
+        // Save state before fill (so we can undo the fill)
         saveState();
         const imageData = ctx.getImageData(Math.floor(startX), Math.floor(startY), 1, 1);
         const pixel = imageData.data;
@@ -693,16 +730,13 @@ canvas.addEventListener('mousedown', (e) => {
             .join('')}`;
         floodFill(Math.floor(startX), Math.floor(startY), targetColor, currentColor);
         isDrawing = false;
-        // Save state after fill completes
-        saveState();
+        // Don't save state again - we already saved before the fill
         saveToLocalStorage(); // Save canvas to localStorage
     } else if (currentTool === 'brush') {
-        // Save state before starting brush stroke
-        saveState();
+        // Don't save state here - we'll save after the stroke completes on mouseup
         drawBrush(startX, startY);
     } else if (currentTool === 'eraser') {
-        // Save state before starting eraser stroke
-        saveState();
+        // Don't save state here - we'll save after the stroke completes on mouseup
         drawEraser(startX, startY);
     }
 });
@@ -754,13 +788,13 @@ canvas.addEventListener('mouseup', (e) => {
     
     // Clear preview image data
     shapePreviewImageData = null;
-    // For brush and eraser, the drawing was already done in mousemove
-    // Save state after drawing completes
     isDrawing = false;
     
     // Save state after drawing operation completes
-    if (currentTool === 'brush' || currentTool === 'eraser' || 
-        currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
+    // For shapes: save final state on mouseup (we didn't save on mousedown)
+    // For brush/eraser: save final state on mouseup (after the stroke completes)
+    if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle' ||
+        currentTool === 'brush' || currentTool === 'eraser') {
         saveState();
         saveToLocalStorage(); // Save canvas to localStorage
     }
