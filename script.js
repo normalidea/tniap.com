@@ -36,9 +36,6 @@ function resizeCanvas() {
     canvas.height = size;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Show canvas wrapper once it's properly sized
-    canvasWrapper.classList.add('ready');
 }
 
 resizeCanvas();
@@ -135,9 +132,10 @@ const MAX_HISTORY = 50;
 // We clear history here to ensure a clean start
 history = [];
 historyIndex = -1;
-setTimeout(() => {
+// Use requestAnimationFrame to ensure DOM is ready, but without visible delay
+requestAnimationFrame(() => {
     loadFromLocalStorage();
-}, 100);
+});
 
 // Initialize history with blank canvas
 function saveState() {
@@ -268,6 +266,8 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
         // Update cursor style
         if (currentTool === 'pan') {
             canvas.style.cursor = 'grab';
+        } else if (currentTool === 'fill') {
+            canvas.style.cursor = 'crosshair';
         } else {
             canvas.style.cursor = 'none';
         }
@@ -277,6 +277,7 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
 // Color picker
 colorPicker.addEventListener('input', (e) => {
     currentColor = e.target.value;
+    updateCursorIndicator(); // Update cursor color for fill tool
     saveToLocalStorage();
 });
 
@@ -399,10 +400,23 @@ function getCanvasCoordinates(e) {
 function updateCursorPosition(e) {
     if (!cursorIndicator) return;
     
-    // Position cursor indicator directly at mouse position (viewport coordinates)
-    // Since cursor indicator is now fixed positioned, we use clientX/clientY directly
-    cursorIndicator.style.left = `${e.clientX}px`;
-    cursorIndicator.style.top = `${e.clientY}px`;
+    // Check if mouse is actually over the canvas
+    const rect = canvas.getBoundingClientRect();
+    const scale = zoomLevel / 100;
+    const canvasX = (e.clientX - rect.left) / scale;
+    const canvasY = (e.clientY - rect.top) / scale;
+    
+    // Only show cursor if mouse is within canvas bounds
+    if (canvasX >= 0 && canvasX <= canvas.width && canvasY >= 0 && canvasY <= canvas.height) {
+        // Position cursor indicator directly at mouse position (viewport coordinates)
+        // Since cursor indicator is now fixed positioned, we use clientX/clientY directly
+        cursorIndicator.style.left = `${e.clientX}px`;
+        cursorIndicator.style.top = `${e.clientY}px`;
+        cursorIndicator.classList.add('visible');
+    } else {
+        // Hide cursor if outside canvas bounds
+        cursorIndicator.classList.remove('visible');
+    }
 }
 
 // Show cursor indicator when mouse enters canvas
@@ -683,6 +697,8 @@ function stopPan() {
     isPanning = false;
     if (currentTool === 'pan') {
         canvas.style.cursor = 'grab';
+    } else if (currentTool === 'fill') {
+        canvas.style.cursor = 'crosshair';
     } else {
         canvas.style.cursor = 'none';
         // Restore cursor indicator if tool needs it

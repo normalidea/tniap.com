@@ -15,6 +15,8 @@ body {
     padding: 10px;
     height: 100%;
     overflow: hidden;
+    /* Prevent layout shift during font loading */
+    visibility: visible;
 }
 
 .app-container {
@@ -214,13 +216,11 @@ body {
     position: relative;
     display: inline-block;
     transform-origin: center center;
-    visibility: hidden;
     margin: 0;
     padding: 0;
-}
-
-.canvas-wrapper.ready {
-    visibility: visible;
+    /* Prevent layout shift by setting minimum dimensions */
+    min-width: 100px;
+    min-height: 100px;
 }
 
 #canvas {
@@ -233,6 +233,9 @@ body {
     display: block;
     margin: 0;
     padding: 0;
+    /* Prevent layout shift - canvas will be sized by JS but container reserves space */
+    min-width: 100px;
+    min-height: 100px;
 }
 
 .cursor-indicator {
@@ -285,6 +288,26 @@ body {
     top: 50%;
     left: 0;
     transform: translateY(-50%);
+}
+
+.cursor-indicator.fill {
+    border: none;
+    border-radius: 0;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cursor-indicator.fill::before {
+    content: 'format_color_fill';
+    font-family: 'Material Symbols Outlined';
+    font-size: 24px;
+    line-height: 1;
+    color: currentColor;
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.8));
 }
 
 /* Modal Styles */
