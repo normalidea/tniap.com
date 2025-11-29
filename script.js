@@ -19,16 +19,16 @@ function resizeCanvas() {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
-    // Account for toolbar width (approximately 220px + gaps)
-    const toolbarWidth = 220;
-    const padding = 40; // Small padding around canvas to show its boundaries
+    const bodyPadding = 20;
+    const toolbarWidth = 230;
+    const containerPadding = 40;
+    const containerBorder = 4;
     
     // Calculate available space for canvas
-    const availableWidth = viewportWidth - toolbarWidth - padding;
-    const availableHeight = viewportHeight - padding;
+    const availableWidth = viewportWidth - toolbarWidth - containerPadding - containerBorder - bodyPadding;
+    const availableHeight = viewportHeight - containerPadding - containerBorder - bodyPadding;
     
-    // Use the smaller dimension to ensure canvas fits at 100% zoom
-    // This way it will use almost exactly the available space
+    // Use the smaller dimension to ensure canvas fits at 100% zoom without scrolling
     const size = Math.min(availableWidth, availableHeight);
     
     canvas.width = size;
