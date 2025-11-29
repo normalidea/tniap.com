@@ -1,5 +1,5 @@
 const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const colorPicker = document.getElementById('colorPicker');
 const brushSizeInput = document.getElementById('brushSize');
 const sizeDisplay = document.getElementById('sizeDisplay');
@@ -35,10 +35,60 @@ function resizeCanvas() {
     canvas.height = size;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Show canvas wrapper once it's properly sized
+    canvasWrapper.classList.add('ready');
 }
 
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+
+// Undo/Redo history
+let history = [];
+let historyIndex = -1;
+const MAX_HISTORY = 50;
+
+// Initialize history with blank canvas
+function saveState() {
+    // Remove any future states if we're not at the end
+    if (historyIndex < history.length - 1) {
+        history = history.slice(0, historyIndex + 1);
+    }
+    
+    // Save current canvas state
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    history.push(imageData);
+    
+    // Limit history size
+    if (history.length > MAX_HISTORY) {
+        history.shift();
+    } else {
+        historyIndex++;
+    }
+}
+
+function restoreState() {
+    if (historyIndex >= 0 && historyIndex < history.length) {
+        ctx.putImageData(history[historyIndex], 0, 0);
+    }
+}
+
+function undo() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        restoreState();
+    }
+}
+
+function redo() {
+    if (historyIndex < history.length - 1) {
+        historyIndex++;
+        restoreState();
+    }
+}
+
+// Save initial blank canvas state after first resize
+saveState();
 
 // State
 let currentTool = 'brush';
@@ -226,6 +276,30 @@ canvas.addEventListener('mouseleave', (e) => {
     }
 });
 
+// Scroll to zoom
+canvas.addEventListener('wheel', (e) => {
+    // Prevent default scrolling
+    e.preventDefault();
+    
+    // Don't zoom while panning
+    if (isPanning) return;
+    
+    // Determine zoom direction (negative deltaY = scroll up = zoom in)
+    const zoomIn = e.deltaY < 0;
+    const zoomAmount = 25; // Same increment as zoom buttons
+    
+    // Calculate new zoom level
+    const newZoom = zoomIn 
+        ? Math.min(400, zoomLevel + zoomAmount)
+        : Math.max(25, zoomLevel - zoomAmount);
+    
+    // Only zoom if it actually changed
+    if (newZoom !== zoomLevel) {
+        // Zoom at mouse position
+        zoomAtPoint(e.clientX, e.clientY, zoomIn);
+    }
+}, { passive: false });
+
 // Global mouseup to stop panning if mouse is released outside canvas
 window.addEventListener('mouseup', (e) => {
     if (isPanning) {
@@ -272,6 +346,15 @@ canvas.addEventListener('mousemove', (e) => {
     lastX = currentX;
     lastY = currentY;
 });
+
+// Save state when drawing ends
+function saveStateAfterDrawing() {
+    // Use setTimeout to batch rapid drawing operations
+    clearTimeout(saveStateAfterDrawing.timeout);
+    saveStateAfterDrawing.timeout = setTimeout(() => {
+        saveState();
+    }, 100);
+}
 
 // Drawing functions
 function drawLine(x1, y1, x2, y2) {
@@ -469,6 +552,8 @@ canvas.addEventListener('mousedown', (e) => {
             .join('')}`;
         floodFill(Math.floor(startX), Math.floor(startY), targetColor, currentColor);
         isDrawing = false;
+        // Save state after fill operation
+        saveStateAfterDrawing();
     } else if (currentTool === 'brush') {
         drawBrush(startX, startY);
     } else if (currentTool === 'eraser') {
@@ -511,16 +596,54 @@ canvas.addEventListener('mouseup', (e) => {
         ctx.arc(startX, startY, radius, 0, Math.PI * 2);
         ctx.stroke();
     }
+    // For brush and eraser, the drawing was already done in mousemove
+    // Just save the state when mouse is released
     
     isDrawing = false;
+    // Save state after drawing operation completes
+    saveStateAfterDrawing();
 });
 
 
-// Clear button
+// Clear button and modal
+const clearModal = document.getElementById('clearModal');
+const modalConfirm = document.getElementById('modalConfirm');
+const modalCancel = document.getElementById('modalCancel');
+
 clearBtn.addEventListener('click', () => {
-    if (confirm('Clear the entire canvas?')) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    clearModal.classList.add('show');
+});
+
+modalCancel.addEventListener('click', () => {
+    clearModal.classList.remove('show');
+});
+
+modalConfirm.addEventListener('click', () => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    clearModal.classList.remove('show');
+    // Save state after clear
+    saveState();
+});
+
+// Keyboard shortcuts for undo/redo
+document.addEventListener('keydown', (e) => {
+    // Ctrl+Z for undo
+    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+    }
+    // Ctrl+Shift+Z or Ctrl+Y for redo
+    if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+        e.preventDefault();
+        redo();
+    }
+});
+
+// Close modal when clicking outside
+clearModal.addEventListener('click', (e) => {
+    if (e.target === clearModal) {
+        clearModal.classList.remove('show');
     }
 });
 

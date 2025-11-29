@@ -23,11 +23,14 @@ body {
     background: #c0c0c0;
     border: 2px outset #c0c0c0;
     padding: 10px;
-    min-width: 200px;
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .tool-group {
@@ -56,6 +59,11 @@ body {
     cursor: pointer;
     font-size: 16px;
     min-height: 40px;
+    height: 40px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.1s;
 }
 
@@ -77,6 +85,9 @@ body {
     display: block;
     font-size: 24px;
     line-height: 1;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
 }
 
 #brushSize {
@@ -179,6 +190,11 @@ body {
     position: relative;
     display: inline-block;
     transform-origin: center center;
+    visibility: hidden;
+}
+
+.canvas-wrapper.ready {
+    visibility: visible;
 }
 
 #canvas {
@@ -188,6 +204,9 @@ body {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .cursor-indicator {
@@ -240,5 +259,87 @@ body {
     top: 50%;
     left: 0;
     transform: translateY(-50%);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    background: #000080;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    border-bottom: 1px solid #000;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.modal-body {
+    padding: 16px;
+    font-size: 11px;
+    color: #000;
+}
+
+.modal-body p {
+    margin: 0;
+}
+
+.modal-footer {
+    padding: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px inset #c0c0c0;
+}
+
+.modal-btn {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    padding: 4px 16px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 75px;
+}
+
+.modal-btn:hover {
+    background: #d4d0c8;
+}
+
+.modal-btn:active {
+    border: 2px inset #c0c0c0;
+    background: #a0a0a0;
+}
+
+.modal-btn-primary {
+    background: #c0c0c0;
 }
 
