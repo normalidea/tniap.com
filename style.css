@@ -1,0 +1,244 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
+    background: #c0c0c0;
+    padding: 10px;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    gap: 10px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.toolbar {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    padding: 10px;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+}
+
+.tool-group {
+    border: 1px inset #c0c0c0;
+    padding: 8px;
+    background: #c0c0c0;
+}
+
+.tool-group h3 {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #000;
+}
+
+.tools {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+
+.tool-btn {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    min-height: 40px;
+    transition: all 0.1s;
+}
+
+.tool-btn:hover {
+    background: #d4d0c8;
+}
+
+.tool-btn:active {
+    border: 2px inset #c0c0c0;
+    background: #a0a0a0;
+}
+
+.tool-btn.active {
+    border: 2px inset #c0c0c0;
+    background: #a0a0a0;
+}
+
+.tool-btn .icon {
+    display: block;
+    font-size: 24px;
+    line-height: 1;
+}
+
+#brushSize {
+    width: 100%;
+    margin: 5px 0;
+}
+
+#sizeDisplay {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+#colorPicker {
+    width: 100%;
+    height: 40px;
+    border: 2px inset #c0c0c0;
+    cursor: pointer;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.zoom-btn {
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 16px;
+    min-width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zoom-btn:hover {
+    background: #d4d0c8;
+}
+
+.zoom-btn:active {
+    border: 2px inset #c0c0c0;
+    background: #a0a0a0;
+}
+
+.zoom-btn .icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+#zoomSlider {
+    flex: 1;
+}
+
+#zoomDisplay {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 8px;
+    margin: 3px 0;
+    background: #c0c0c0;
+    border: 2px outset #c0c0c0;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.action-btn:hover {
+    background: #d4d0c8;
+}
+
+.action-btn:active {
+    border: 2px inset #c0c0c0;
+    background: #a0a0a0;
+}
+
+.canvas-container {
+    flex: 1;
+    background: #c0c0c0;
+    border: 2px inset #c0c0c0;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    position: relative;
+}
+
+.canvas-wrapper {
+    position: relative;
+    display: inline-block;
+    transform-origin: center center;
+}
+
+#canvas {
+    background: #ffffff;
+    border: 1px solid #000;
+    cursor: none;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+.cursor-indicator {
+    position: fixed;
+    pointer-events: none;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    z-index: 10;
+}
+
+.cursor-indicator.visible {
+    display: block;
+}
+
+.cursor-indicator.brush {
+    border-color: rgba(0, 0, 0, 0.5);
+}
+
+.cursor-indicator.eraser {
+    border-color: rgba(0, 0, 0, 0.5);
+}
+
+.cursor-indicator.shape {
+    border: none;
+    border-radius: 0;
+    width: 20px;
+    height: 20px;
+}
+
+.cursor-indicator.shape::before,
+.cursor-indicator.shape::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.cursor-indicator.shape::before {
+    width: 2px;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+.cursor-indicator.shape::after {
+    width: 100%;
+    height: 2px;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+

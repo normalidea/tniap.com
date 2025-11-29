@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Paint</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="toolbar">
+            <div class="tool-group">
+                <h3>Tools</h3>
+                <div class="tools">
+                    <button class="tool-btn active" data-tool="brush" title="Brush">
+                        <span class="icon material-symbols-outlined">format_paint</span>
+                    </button>
+                    <button class="tool-btn" data-tool="eraser" title="Eraser">
+                        <span class="icon material-symbols-outlined">ink_eraser</span>
+                    </button>
+                    <button class="tool-btn" data-tool="line" title="Line">
+                        <span class="icon material-symbols-outlined">straighten</span>
+                    </button>
+                    <button class="tool-btn" data-tool="rectangle" title="Rectangle">
+                        <span class="icon material-symbols-outlined">crop_free</span>
+                    </button>
+                    <button class="tool-btn" data-tool="circle" title="Circle">
+                        <span class="icon material-symbols-outlined">radio_button_unchecked</span>
+                    </button>
+                    <button class="tool-btn" data-tool="fill" title="Fill">
+                        <span class="icon material-symbols-outlined">format_color_fill</span>
+                    </button>
+                    <button class="tool-btn" data-tool="zoom" title="Zoom In">
+                        <span class="icon material-symbols-outlined">zoom_in</span>
+                    </button>
+                    <button class="tool-btn" data-tool="zoomOut" title="Zoom Out">
+                        <span class="icon material-symbols-outlined">zoom_out</span>
+                    </button>
+                    <button class="tool-btn" data-tool="pan" title="Pan">
+                        <span class="icon material-symbols-outlined">pan_tool_alt</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="tool-group">
+                <h3>Size</h3>
+                <input type="range" id="brushSize" min="1" max="20" value="3">
+                <span id="sizeDisplay">3</span>
+            </div>
+            
+            <div class="tool-group">
+                <h3>Color</h3>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+            
+            <div class="tool-group">
+                <h3>Zoom</h3>
+                <div class="zoom-controls">
+                    <button id="zoomOutBtn" class="zoom-btn" title="Zoom Out">
+                        <span class="icon material-symbols-outlined">remove</span>
+                    </button>
+                    <input type="range" id="zoomSlider" min="25" max="400" value="100" step="25">
+                    <button id="zoomInBtn" class="zoom-btn" title="Zoom In">
+                        <span class="icon material-symbols-outlined">add</span>
+                    </button>
+                </div>
+                <span id="zoomDisplay">100%</span>
+            </div>
+            
+            <div class="tool-group">
+                <button id="clearBtn" class="action-btn">Clear</button>
+                <button id="saveBtn" class="action-btn">Save</button>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="canvas"></canvas>
+            </div>
+            <div id="cursorIndicator" class="cursor-indicator"></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
