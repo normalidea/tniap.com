@@ -23,10 +23,11 @@ function resizeCanvas() {
     const toolbarWidth = 230;
     const containerPadding = 40;
     const containerBorder = 4;
+    const buffer = 2; // Small safety margin to prevent scrollbar
     
     // Calculate available space for canvas
-    const availableWidth = viewportWidth - toolbarWidth - containerPadding - containerBorder - bodyPadding;
-    const availableHeight = viewportHeight - containerPadding - containerBorder - bodyPadding;
+    const availableWidth = viewportWidth - toolbarWidth - containerPadding - containerBorder - bodyPadding - buffer;
+    const availableHeight = viewportHeight - containerPadding - containerBorder - bodyPadding - buffer;
     
     // Use the smaller dimension to ensure canvas fits at 100% zoom without scrolling
     const size = Math.min(availableWidth, availableHeight);
@@ -183,8 +184,8 @@ function zoomAtPoint(x, y, zoomIn = true) {
     
     // Calculate new zoom
     const newZoom = zoomIn 
-        ? Math.min(400, zoomLevel + 50)
-        : Math.max(25, zoomLevel - 50);
+        ? Math.min(400, zoomLevel + 5)
+        : Math.max(25, zoomLevel - 5);
     
     // Update zoom
     updateZoom(newZoom);
@@ -217,12 +218,12 @@ zoomSlider.addEventListener('input', (e) => {
 });
 
 zoomInBtn.addEventListener('click', () => {
-    const newZoom = Math.min(400, zoomLevel + 25);
+    const newZoom = Math.min(400, zoomLevel + 5);
     updateZoom(newZoom);
 });
 
 zoomOutBtn.addEventListener('click', () => {
-    const newZoom = Math.max(25, zoomLevel - 25);
+    const newZoom = Math.max(25, zoomLevel - 5);
     updateZoom(newZoom);
 });
 
@@ -299,7 +300,7 @@ canvas.addEventListener('wheel', (e) => {
     
     // Determine zoom direction (negative deltaY = scroll up = zoom in)
     const zoomIn = e.deltaY < 0;
-    const zoomAmount = 25; // Same increment as zoom buttons
+    const zoomAmount = 5; // Same increment as zoom buttons
     
     // Calculate new zoom level
     const newZoom = zoomIn 
