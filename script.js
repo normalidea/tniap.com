@@ -58,32 +58,45 @@ function saveState() {
     // Save current canvas state
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     history.push(imageData);
+    historyIndex = history.length - 1; // Always point to the last state
     
     // Limit history size
     if (history.length > MAX_HISTORY) {
         history.shift();
-    } else {
-        historyIndex++;
+        historyIndex = history.length - 1; // Update index after shift
     }
+    console.log('State saved, history length:', history.length, 'index:', historyIndex);
 }
 
 function restoreState() {
     if (historyIndex >= 0 && historyIndex < history.length) {
+        console.log('Restoring state at index:', historyIndex);
         ctx.putImageData(history[historyIndex], 0, 0);
+        console.log('State restored');
+    } else {
+        console.log('Cannot restore - invalid index:', historyIndex, 'history.length:', history.length);
     }
 }
 
 function undo() {
+    console.log('Undo called, historyIndex:', historyIndex, 'history.length:', history.length);
     if (historyIndex > 0) {
         historyIndex--;
         restoreState();
+        console.log('Undone, new historyIndex:', historyIndex);
+    } else {
+        console.log('Cannot undo - already at beginning');
     }
 }
 
 function redo() {
+    console.log('Redo called, historyIndex:', historyIndex, 'history.length:', history.length);
     if (historyIndex < history.length - 1) {
         historyIndex++;
         restoreState();
+        console.log('Redone, new historyIndex:', historyIndex);
+    } else {
+        console.log('Cannot redo - already at end');
     }
 }
 
@@ -348,11 +361,15 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 // Save state when drawing ends
+let saveStateTimeout = null;
 function saveStateAfterDrawing() {
     // Use setTimeout to batch rapid drawing operations
-    clearTimeout(saveStateAfterDrawing.timeout);
-    saveStateAfterDrawing.timeout = setTimeout(() => {
+    if (saveStateTimeout) {
+        clearTimeout(saveStateTimeout);
+    }
+    saveStateTimeout = setTimeout(() => {
         saveState();
+        console.log('State saved, history length:', history.length, 'index:', historyIndex);
     }, 100);
 }
 
@@ -537,6 +554,9 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
     
+    // Don't save state here - we'll save after drawing completes
+    // This prevents saving empty states
+    
     isDrawing = true;
     const coords = getCanvasCoordinates(e);
     startX = coords.x;
@@ -545,6 +565,8 @@ canvas.addEventListener('mousedown', (e) => {
     lastY = startY;
     
     if (currentTool === 'fill') {
+        // Save state before fill
+        saveState();
         const imageData = ctx.getImageData(Math.floor(startX), Math.floor(startY), 1, 1);
         const pixel = imageData.data;
         const targetColor = `#${[pixel[0], pixel[1], pixel[2]]
@@ -552,11 +574,15 @@ canvas.addEventListener('mousedown', (e) => {
             .join('')}`;
         floodFill(Math.floor(startX), Math.floor(startY), targetColor, currentColor);
         isDrawing = false;
-        // Save state after fill operation
-        saveStateAfterDrawing();
+        // Save state after fill completes
+        saveState();
     } else if (currentTool === 'brush') {
+        // Save state before starting brush stroke
+        saveState();
         drawBrush(startX, startY);
     } else if (currentTool === 'eraser') {
+        // Save state before starting eraser stroke
+        saveState();
         drawEraser(startX, startY);
     }
 });
@@ -597,11 +623,14 @@ canvas.addEventListener('mouseup', (e) => {
         ctx.stroke();
     }
     // For brush and eraser, the drawing was already done in mousemove
-    // Just save the state when mouse is released
-    
+    // Save state after drawing completes
     isDrawing = false;
+    
     // Save state after drawing operation completes
-    saveStateAfterDrawing();
+    if (currentTool === 'brush' || currentTool === 'eraser' || 
+        currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
+        saveState();
+    }
 });
 
 
@@ -628,17 +657,26 @@ modalConfirm.addEventListener('click', () => {
 
 // Keyboard shortcuts for undo/redo
 document.addEventListener('keydown', (e) => {
-    // Ctrl+Z for undo
-    if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+    // Check for both Ctrl (Windows/Linux) and Meta/Command (Mac)
+    const isModifierPressed = e.ctrlKey || e.metaKey;
+    
+    // Ctrl+Z or Cmd+Z for undo (check both lowercase and uppercase)
+    if (isModifierPressed && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
+        console.log('Undo shortcut detected');
         undo();
+        return false;
     }
-    // Ctrl+Shift+Z or Ctrl+Y for redo
-    if ((e.ctrlKey && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+    // Ctrl+Shift+Z or Cmd+Shift+Z or Ctrl+Y or Cmd+Y for redo
+    if ((isModifierPressed && e.shiftKey && (e.key === 'z' || e.key === 'Z')) || (isModifierPressed && (e.key === 'y' || e.key === 'Y'))) {
         e.preventDefault();
+        e.stopPropagation();
+        console.log('Redo shortcut detected');
         redo();
+        return false;
     }
-});
+}, true); // Use capture phase
 
 // Close modal when clicking outside
 clearModal.addEventListener('click', (e) => {
