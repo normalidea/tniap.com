@@ -44,10 +44,90 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
+// LocalStorage functions
+function saveToLocalStorage() {
+    try {
+        // Save zoom level
+        localStorage.setItem('paintZoom', zoomLevel.toString());
+        
+        // Save color
+        localStorage.setItem('paintColor', currentColor);
+        
+        // Save brush size
+        localStorage.setItem('paintBrushSize', brushSize.toString());
+        
+        // Save canvas drawing as data URL
+        const canvasData = canvas.toDataURL('image/png');
+        localStorage.setItem('paintCanvas', canvasData);
+    } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        // Load zoom level
+        const savedZoom = localStorage.getItem('paintZoom');
+        if (savedZoom) {
+            const zoom = parseInt(savedZoom);
+            if (zoom >= 25 && zoom <= 400) {
+                updateZoom(zoom, true); // Skip save when loading
+            }
+        }
+        
+        // Load color
+        const savedColor = localStorage.getItem('paintColor');
+        if (savedColor) {
+            currentColor = savedColor;
+            colorPicker.value = savedColor;
+        }
+        
+        // Load brush size
+        const savedBrushSize = localStorage.getItem('paintBrushSize');
+        if (savedBrushSize) {
+            const size = parseInt(savedBrushSize);
+            if (size >= 1 && size <= 20) {
+                brushSize = size;
+                brushSizeInput.value = size;
+                sizeDisplay.textContent = size;
+                updateCursorIndicator();
+            }
+        }
+        
+        // Load canvas drawing - do this last after other settings are loaded
+        const savedCanvas = localStorage.getItem('paintCanvas');
+        if (savedCanvas) {
+            const img = new Image();
+            img.onload = () => {
+                // Clear canvas and draw saved image with proper dimensions
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Update history with loaded canvas
+                saveState();
+            };
+            img.onerror = () => {
+                console.warn('Failed to load canvas image from localStorage');
+            };
+            img.src = savedCanvas;
+        }
+    } catch (e) {
+        console.warn('Failed to load from localStorage:', e);
+    }
+}
+
 // Undo/Redo history
 let history = [];
 let historyIndex = -1;
 const MAX_HISTORY = 50;
+
+// Save initial blank canvas state after first resize
+saveState();
+
+// Load saved state from localStorage after canvas is ready
+setTimeout(() => {
+    loadFromLocalStorage();
+}, 100);
 
 // Initialize history with blank canvas
 function saveState() {
@@ -101,8 +181,25 @@ function redo() {
     }
 }
 
-// Save initial blank canvas state after first resize
-saveState();
+// LocalStorage functions
+function saveToLocalStorage() {
+    try {
+        // Save zoom level
+        localStorage.setItem('paintZoom', zoomLevel.toString());
+        
+        // Save color
+        localStorage.setItem('paintColor', currentColor);
+        
+        // Save brush size
+        localStorage.setItem('paintBrushSize', brushSize.toString());
+        
+        // Save canvas drawing as data URL
+        const canvasData = canvas.toDataURL('image/png');
+        localStorage.setItem('paintCanvas', canvasData);
+    } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+    }
+}
 
 // State
 let currentTool = 'brush';
@@ -113,6 +210,7 @@ let startX = 0;
 let startY = 0;
 let lastX = 0;
 let lastY = 0;
+let shapePreviewImageData = null; // Store canvas state for shape preview
 let zoomLevel = 100;
 let isPanning = false;
 let panStartX = 0;
@@ -142,6 +240,7 @@ document.querySelectorAll('.tool-btn').forEach(btn => {
 // Color picker
 colorPicker.addEventListener('input', (e) => {
     currentColor = e.target.value;
+    saveToLocalStorage();
 });
 
 // Brush size
@@ -149,16 +248,20 @@ brushSizeInput.addEventListener('input', (e) => {
     brushSize = parseInt(e.target.value);
     sizeDisplay.textContent = brushSize;
     updateCursorIndicator();
+    saveToLocalStorage();
 });
 
 // Zoom functionality
-function updateZoom(zoom) {
+function updateZoom(zoom, skipSave = false) {
     zoomLevel = zoom;
     zoomSlider.value = zoom;
     zoomDisplay.textContent = `${zoom}%`;
     const scale = zoom / 100;
     canvasWrapper.style.transform = `scale(${scale}) translate(${panOffsetX / scale}px, ${panOffsetY / scale}px)`;
     updateCursorIndicator();
+    if (!skipSave) {
+        saveToLocalStorage();
+    }
 }
 
 function zoomAtPoint(x, y, zoomIn = true) {
@@ -242,9 +345,6 @@ function updateCursorIndicator() {
     } else if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
         // Shape tools use crosshair - size is fixed
         cursorIndicator.classList.add('shape');
-    } else if (currentTool === 'zoom' || currentTool === 'zoomOut') {
-        // Zoom tools use crosshair
-        cursorIndicator.classList.add('shape');
     } else if (currentTool === 'pan') {
         // Pan tool - hide cursor indicator, use default cursor
         cursorIndicator.classList.remove('visible');
@@ -271,8 +371,7 @@ function updateCursorPosition(e) {
 // Show cursor indicator when mouse enters canvas
 canvas.addEventListener('mouseenter', (e) => {
     if (currentTool === 'brush' || currentTool === 'eraser' || 
-        currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle' ||
-        currentTool === 'zoom' || currentTool === 'zoomOut') {
+        currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
         cursorIndicator.classList.add('visible');
         updateCursorPosition(e);
         updateCursorIndicator();
@@ -337,8 +436,7 @@ canvas.addEventListener('mousemove', (e) => {
     
     // Update cursor indicator position
     if (currentTool === 'brush' || currentTool === 'eraser' || 
-        currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle' ||
-        currentTool === 'zoom' || currentTool === 'zoomOut') {
+        currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
         updateCursorPosition(e);
     }
     
@@ -354,7 +452,34 @@ canvas.addEventListener('mousemove', (e) => {
     } else if (currentTool === 'eraser') {
         eraseLine(lastX, lastY, currentX, currentY);
     } else if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
-        // For shapes, we'll redraw on mouseup
+        // Draw shape preview
+        if (shapePreviewImageData) {
+            ctx.putImageData(shapePreviewImageData, 0, 0);
+        }
+        
+        // Draw preview outline
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = brushSize;
+        
+        if (currentTool === 'line') {
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+        } else if (currentTool === 'rectangle') {
+            const width = currentX - startX;
+            const height = currentY - startY;
+            ctx.strokeRect(startX, startY, width, height);
+        } else if (currentTool === 'circle') {
+            const width = currentX - startX;
+            const height = currentY - startY;
+            const centerX = startX + width / 2;
+            const centerY = startY + height / 2;
+            const radius = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
     }
     
     lastX = currentX;
@@ -525,8 +650,7 @@ function stopPan() {
         canvas.style.cursor = 'none';
         // Restore cursor indicator if tool needs it
         if (currentTool === 'brush' || currentTool === 'eraser' || 
-            currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle' ||
-            currentTool === 'zoom' || currentTool === 'zoomOut') {
+            currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
             if (cursorIndicator) {
                 cursorIndicator.classList.add('visible');
             }
@@ -543,18 +667,6 @@ canvas.addEventListener('mousedown', (e) => {
         return;
     }
     
-    if (currentTool === 'zoom') {
-        // Zoom in tool
-        zoomAtPoint(e.clientX, e.clientY, true);
-        return;
-    }
-    
-    if (currentTool === 'zoomOut') {
-        // Zoom out tool
-        zoomAtPoint(e.clientX, e.clientY, false);
-        return;
-    }
-    
     // Don't save state here - we'll save after drawing completes
     // This prevents saving empty states
     
@@ -564,6 +676,12 @@ canvas.addEventListener('mousedown', (e) => {
     startY = coords.y;
     lastX = startX;
     lastY = startY;
+    
+    // Save canvas state for shape preview
+    if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
+        shapePreviewImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        saveState(); // Save state before starting shape
+    }
     
     if (currentTool === 'fill') {
         // Save state before fill
@@ -577,6 +695,7 @@ canvas.addEventListener('mousedown', (e) => {
         isDrawing = false;
         // Save state after fill completes
         saveState();
+        saveToLocalStorage(); // Save canvas to localStorage
     } else if (currentTool === 'brush') {
         // Save state before starting brush stroke
         saveState();
@@ -602,6 +721,11 @@ canvas.addEventListener('mouseup', (e) => {
     const endX = coords.x;
     const endY = coords.y;
     
+    // Restore canvas state and draw final shape
+    if (shapePreviewImageData) {
+        ctx.putImageData(shapePreviewImageData, 0, 0);
+    }
+    
     if (currentTool === 'line') {
         ctx.beginPath();
         ctx.moveTo(startX, startY);
@@ -618,11 +742,18 @@ canvas.addEventListener('mouseup', (e) => {
     } else if (currentTool === 'circle') {
         ctx.strokeStyle = currentColor;
         ctx.lineWidth = brushSize;
-        const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        const width = endX - startX;
+        const height = endY - startY;
+        const centerX = startX + width / 2;
+        const centerY = startY + height / 2;
+        const radius = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
         ctx.beginPath();
-        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         ctx.stroke();
     }
+    
+    // Clear preview image data
+    shapePreviewImageData = null;
     // For brush and eraser, the drawing was already done in mousemove
     // Save state after drawing completes
     isDrawing = false;
@@ -631,6 +762,7 @@ canvas.addEventListener('mouseup', (e) => {
     if (currentTool === 'brush' || currentTool === 'eraser' || 
         currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
         saveState();
+        saveToLocalStorage(); // Save canvas to localStorage
     }
 });
 
@@ -654,6 +786,7 @@ modalConfirm.addEventListener('click', () => {
     clearModal.classList.remove('show');
     // Save state after clear
     saveState();
+    saveToLocalStorage(); // Save cleared canvas to localStorage
 });
 
 // Keyboard shortcuts for undo/redo
