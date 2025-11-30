@@ -19,15 +19,19 @@ function resizeCanvas() {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
-    const bodyPadding = 20;
-    const toolbarWidth = 230;
-    const containerPadding = 40;
+    const isMobile = viewportWidth <= 768;
+    const bodyPadding = isMobile ? 0 : 20;
+    const toolbarWidth = isMobile ? 0 : 230; // Toolbar is horizontal on mobile
+    const containerPadding = isMobile ? 10 : 40;
     const containerBorder = 4;
     const buffer = 2; // Small safety margin to prevent scrollbar
     
+    // On mobile, account for toolbar height
+    const toolbarHeight = isMobile ? (document.querySelector('.toolbar')?.offsetHeight || 0) : 0;
+    
     // Calculate available space for canvas
     const availableWidth = viewportWidth - toolbarWidth - containerPadding - containerBorder - bodyPadding - buffer;
-    const availableHeight = viewportHeight - containerPadding - containerBorder - bodyPadding - buffer;
+    const availableHeight = viewportHeight - toolbarHeight - containerPadding - containerBorder - bodyPadding - buffer;
     
     // Use the smaller dimension to ensure canvas fits at 100% zoom without scrolling
     const size = Math.min(availableWidth, availableHeight);
@@ -392,8 +396,11 @@ function updateCursorIndicator() {
 function getCanvasCoordinates(e) {
     const rect = canvas.getBoundingClientRect();
     const scale = zoomLevel / 100;
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
+    // Handle both mouse and touch events
+    const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+    const x = (clientX - rect.left) / scale;
+    const y = (clientY - rect.top) / scale;
     return { x, y };
 }
 
@@ -662,8 +669,11 @@ function floodFill(x, y, targetColor, fillColor) {
 // Pan functionality
 function startPan(e) {
     isPanning = true;
-    panStartX = e.clientX;
-    panStartY = e.clientY;
+    // Handle both mouse and touch events
+    const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+    panStartX = clientX;
+    panStartY = clientY;
     canvas.style.cursor = 'grabbing';
     // Hide cursor indicator when panning
     if (cursorIndicator) {
@@ -676,8 +686,11 @@ function startPan(e) {
 function doPan(e) {
     if (!isPanning) return;
     e.preventDefault();
-    const deltaX = e.clientX - panStartX;
-    const deltaY = e.clientY - panStartY;
+    // Handle both mouse and touch events
+    const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+    const deltaX = clientX - panStartX;
+    const deltaY = clientY - panStartY;
     
     // Update pan offset
     panOffsetX += deltaX;
@@ -688,8 +701,8 @@ function doPan(e) {
     canvasWrapper.style.transform = `scale(${currentScale}) translate(${panOffsetX / currentScale}px, ${panOffsetY / currentScale}px)`;
     
     // Update start position for next move
-    panStartX = e.clientX;
-    panStartY = e.clientY;
+    panStartX = clientX;
+    panStartY = clientY;
 }
 
 function stopPan() {
@@ -713,8 +726,21 @@ function stopPan() {
 
 // Mouse events
 canvas.addEventListener('mousedown', (e) => {
-    // Middle click or pan tool - start panning
-    if (e.button === 1 || currentTool === 'pan') {
+    // Middle click - start panning
+    if (e.button === 1) {
+        e.preventDefault();
+        startPan(e);
+        return;
+    }
+    
+    handleDrawingStart(e);
+});
+
+
+// Helper function to handle drawing start (used by both mouse and touch)
+function handleDrawingStart(e) {
+    // Pan tool - start panning
+    if (currentTool === 'pan') {
         e.preventDefault();
         startPan(e);
         return;
@@ -755,10 +781,10 @@ canvas.addEventListener('mousedown', (e) => {
         // Don't save state here - we'll save after the stroke completes on mouseup
         drawEraser(startX, startY);
     }
-});
+}
 
-
-canvas.addEventListener('mouseup', (e) => {
+// Helper function to handle drawing end (used by both mouse and touch)
+function handleDrawingEnd(e) {
     // Stop panning
     if (isPanning) {
         stopPan();
@@ -814,7 +840,119 @@ canvas.addEventListener('mouseup', (e) => {
         saveState();
         saveToLocalStorage(); // Save canvas to localStorage
     }
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', (e) => {
+    // Middle click - start panning
+    if (e.button === 1) {
+        e.preventDefault();
+        startPan(e);
+        return;
+    }
+    
+    handleDrawingStart(e);
 });
+
+canvas.addEventListener('mouseup', (e) => {
+    handleDrawingEnd(e);
+});
+
+// Touch events
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Prevent scrolling and zooming
+    if (e.touches.length === 1) {
+        // Single touch - handle drawing
+        handleDrawingStart(e);
+    } else if (e.touches.length === 2) {
+        // Two touches - could be pan/zoom, but for now just prevent default
+        e.preventDefault();
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    if (e.touches.length === 1 && isDrawing) {
+        // Handle drawing movement
+        const touch = e.touches[0];
+        const mouseEvent = {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            touches: e.touches
+        };
+        
+        // Update cursor indicator position
+        if (currentTool === 'brush' || currentTool === 'eraser' || 
+            currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
+            updateCursorPosition(mouseEvent);
+        }
+        
+        // Handle drawing
+        const coords = getCanvasCoordinates(mouseEvent);
+        const currentX = coords.x;
+        const currentY = coords.y;
+        
+        if (currentTool === 'brush') {
+            drawLine(lastX, lastY, currentX, currentY);
+        } else if (currentTool === 'eraser') {
+            eraseLine(lastX, lastY, currentX, currentY);
+        } else if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
+            // Draw shape preview
+            if (shapePreviewImageData) {
+                ctx.putImageData(shapePreviewImageData, 0, 0);
+            }
+            
+            // Draw preview outline
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = brushSize;
+            
+            if (currentTool === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(currentX, currentY);
+                ctx.stroke();
+            } else if (currentTool === 'rectangle') {
+                const width = currentX - startX;
+                const height = currentY - startY;
+                ctx.strokeRect(startX, startY, width, height);
+            } else if (currentTool === 'circle') {
+                const width = currentX - startX;
+                const height = currentY - startY;
+                const centerX = startX + width / 2;
+                const centerY = startY + height / 2;
+                const radius = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+        
+        lastX = currentX;
+        lastY = currentY;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (e.touches.length === 0) {
+        // All touches ended
+        const lastTouch = e.changedTouches[0];
+        const mouseEvent = {
+            clientX: lastTouch.clientX,
+            clientY: lastTouch.clientY,
+            touches: []
+        };
+        handleDrawingEnd(mouseEvent);
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    isDrawing = false;
+    if (isPanning) {
+        stopPan();
+    }
+}, { passive: false });
 
 
 // Clear button and modal
