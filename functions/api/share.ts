@@ -14,35 +14,64 @@ export async function onRequestPost(ctx: {
     const formData = await request.formData();
     
     if (!formData) {
-      console.error('formData() returned null/undefined');
-      return new Response(JSON.stringify({ error: 'Failed to parse form data' }), { 
+      return new Response(JSON.stringify({ error: 'Invalid request' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    // Debug: log all form data keys
-    console.log('FormData keys:', Array.from(formData.keys()));
-    
     const canvasBlob = formData.get('canvas') as File | Blob | null;
 
     if (!canvasBlob) {
-      console.error('No canvas blob found in form data. Available keys:', Array.from(formData.keys()));
-      return new Response(JSON.stringify({ error: 'No painting data provided' }), { 
+      return new Response(JSON.stringify({ error: 'Invalid request' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
     if (canvasBlob.size === 0) {
-      console.error('Canvas blob is empty');
-      return new Response(JSON.stringify({ error: 'Painting data is empty' }), { 
+      return new Response(JSON.stringify({ error: 'Invalid request' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Security: File size limit (2MB max)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    if (canvasBlob.size > MAX_FILE_SIZE) {
+      return new Response(JSON.stringify({ error: 'Invalid file' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Security: Validate image is PNG and exactly 761x761
+    const arrayBuffer = await canvasBlob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer.slice(0, 12));
+    
+    // Check for PNG signature
+    const isPNG = uint8Array[0] === 0x89 && uint8Array[1] === 0x50 && uint8Array[2] === 0x4E && uint8Array[3] === 0x47;
+    
+    if (!isPNG) {
+      return new Response(JSON.stringify({ error: 'Invalid file' }), { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    console.log('Canvas blob size:', canvasBlob.size);
+    // Parse PNG dimensions from IHDR chunk (bytes 16-23)
+    const widthBytes = new DataView(arrayBuffer, 16, 4);
+    const heightBytes = new DataView(arrayBuffer, 20, 4);
+    const actualWidth = widthBytes.getUint32(0, false); // Big-endian
+    const actualHeight = heightBytes.getUint32(0, false); // Big-endian
+    
+    // Validate dimensions are exactly 761x761
+    if (actualWidth !== 761 || actualHeight !== 761) {
+      return new Response(JSON.stringify({ error: 'Invalid file' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     // Generate a unique ID for this canvas
     const canvasId = crypto.randomUUID();
