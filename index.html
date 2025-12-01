@@ -67,6 +67,7 @@
             <div class="tool-group">
                 <button id="clearBtn" class="action-btn">Clear</button>
                 <button id="saveBtn" class="action-btn">Save</button>
+                <button id="shareBtn" class="action-btn">Share</button>
             </div>
         </div>
         
@@ -79,11 +80,26 @@
             <div id="clearModal" class="modal">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <p>Are you sure you want to clear the entire canvas?</p>
+                        <p>Are you sure you want to clear the entire painting?</p>
                     </div>
                     <div class="modal-footer">
                         <button id="modalCancel" class="modal-btn">Cancel</button>
                         <button id="modalConfirm" class="modal-btn modal-btn-primary">Clear</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Share Modal -->
+            <div id="shareModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p id="shareStatus">🎨 Uploading your painting...</p>
+                        <div id="shareLinkContainer" style="display: none; margin-top: 10px;">
+                            <input type="text" id="shareLink" readonly style="width: 100%; padding: 4px; font-size: 11px; border: 2px solid #808080; background: #fff;">
+                            <button id="copyLinkBtn" class="modal-btn" style="margin-top: 8px; width: 100%;">Copy Link</button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="shareModalClose" class="modal-btn modal-btn-primary">Close</button>
                     </div>
                 </div>
             </div>

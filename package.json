@@ -1,0 +1,24 @@
+{
+  "name": "tniap.com",
+  "version": "1.0.0",
+  "description": "- A very simple in-browser drawing app",
+  "main": "script.js",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251128.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/normalidea/tniap.com.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/normalidea/tniap.com/issues"
+  },
+  "homepage": "https://github.com/normalidea/tniap.com#readme"
+}

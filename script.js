@@ -5,6 +5,7 @@ const brushSizeInput = document.getElementById('brushSize');
 const sizeDisplay = document.getElementById('sizeDisplay');
 const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
+const shareBtn = document.getElementById('shareBtn');
 const cursorIndicator = document.getElementById('cursorIndicator');
 const canvasWrapper = document.getElementById('canvasWrapper');
 const zoomSlider = document.getElementById('zoomSlider');
@@ -1013,6 +1014,95 @@ saveBtn.addEventListener('click', () => {
     link.download = 'paint-drawing.png';
     link.href = canvas.toDataURL();
     link.click();
+});
+
+// Share button
+const shareModal = document.getElementById('shareModal');
+const shareStatus = document.getElementById('shareStatus');
+const shareLinkContainer = document.getElementById('shareLinkContainer');
+const shareLink = document.getElementById('shareLink');
+const copyLinkBtn = document.getElementById('copyLinkBtn');
+const shareModalClose = document.getElementById('shareModalClose');
+
+shareBtn.addEventListener('click', async () => {
+    // Show modal with loading state
+    shareModal.classList.add('show');
+    shareStatus.textContent = '🎨 Uploading your painting...';
+    shareLinkContainer.style.display = 'none';
+    
+    try {
+        // Convert canvas to blob
+        const dataUrl = canvas.toDataURL('image/png');
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('canvas', blob, 'canvas.png');
+        
+        // Upload to API
+        const uploadResponse = await fetch('/api/share', {
+            method: 'POST',
+            body: formData,
+        });
+        
+        if (!uploadResponse.ok) {
+            throw new Error('Failed to upload painting');
+        }
+        
+        const { id } = await uploadResponse.json();
+        
+        // Generate shareable URL
+        const shareUrl = `${window.location.origin}/paintings/${id}`;
+        
+        // Update UI
+        shareStatus.textContent = '🎉 Your painting is ready to share!';
+        shareLink.value = shareUrl;
+        shareLinkContainer.style.display = 'block';
+    } catch (error) {
+        console.error('Error sharing painting:', error);
+        shareStatus.textContent = 'Error sharing painting. Please try again.';
+        shareLinkContainer.style.display = 'none';
+    }
+});
+
+// Copy link button
+copyLinkBtn.addEventListener('click', async () => {
+    try {
+        await navigator.clipboard.writeText(shareLink.value);
+        
+        // Update button text temporarily
+        const originalText = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = 'Copied!';
+        setTimeout(() => {
+            copyLinkBtn.textContent = originalText;
+        }, 2000);
+    } catch (error) {
+        // Fallback: select text and show message (user can manually copy)
+        shareLink.select();
+        shareLink.focus();
+        
+        // Show a message that user needs to copy manually
+        const originalText = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = 'Select & Copy';
+        setTimeout(() => {
+            copyLinkBtn.textContent = originalText;
+        }, 2000);
+        
+        console.warn('Clipboard API not available, text selected for manual copy');
+    }
+});
+
+// Close share modal
+shareModalClose.addEventListener('click', () => {
+    shareModal.classList.remove('show');
+});
+
+// Close modal when clicking outside
+shareModal.addEventListener('click', (e) => {
+    if (e.target === shareModal) {
+        shareModal.classList.remove('show');
+    }
 });
 
 // Initialize cursor indicator
