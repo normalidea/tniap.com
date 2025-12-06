@@ -14,6 +14,8 @@ const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 
 // Set canvas size
+// Canvas internal resolution is always 761x761 for API compatibility
+// Visual size is scaled via CSS for responsive display
 function resizeCanvas() {
     const container = canvas.parentElement;
     // Get viewport dimensions
@@ -35,10 +37,17 @@ function resizeCanvas() {
     const availableHeight = viewportHeight - toolbarHeight - containerPadding - containerBorder - bodyPadding - buffer;
     
     // Use the smaller dimension to ensure canvas fits at 100% zoom without scrolling
-    const size = Math.min(availableWidth, availableHeight);
+    const displaySize = Math.min(availableWidth, availableHeight);
     
-    canvas.width = size;
-    canvas.height = size;
+    // Canvas internal resolution is always 761x761 (required by API)
+    const CANVAS_SIZE = 761;
+    canvas.width = CANVAS_SIZE;
+    canvas.height = CANVAS_SIZE;
+    
+    // Set CSS size for responsive display
+    canvas.style.width = `${displaySize}px`;
+    canvas.style.height = `${displaySize}px`;
+    
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
@@ -396,12 +405,23 @@ function updateCursorIndicator() {
 
 function getCanvasCoordinates(e) {
     const rect = canvas.getBoundingClientRect();
-    const scale = zoomLevel / 100;
+    const zoomScale = zoomLevel / 100;
     // Handle both mouse and touch events
     const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
     const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
-    const x = (clientX - rect.left) / scale;
-    const y = (clientY - rect.top) / scale;
+    
+    // Get position relative to canvas element
+    const relativeX = clientX - rect.left;
+    const relativeY = clientY - rect.top;
+    
+    // Account for CSS scaling (canvas internal size vs displayed size)
+    const cssScaleX = canvas.width / rect.width;
+    const cssScaleY = canvas.height / rect.height;
+    
+    // Convert to canvas coordinates (accounting for CSS scale and zoom)
+    const x = (relativeX * cssScaleX) / zoomScale;
+    const y = (relativeY * cssScaleY) / zoomScale;
+    
     return { x, y };
 }
 
@@ -410,9 +430,19 @@ function updateCursorPosition(e) {
     
     // Check if mouse is actually over the canvas
     const rect = canvas.getBoundingClientRect();
-    const scale = zoomLevel / 100;
-    const canvasX = (e.clientX - rect.left) / scale;
-    const canvasY = (e.clientY - rect.top) / scale;
+    const zoomScale = zoomLevel / 100;
+    
+    // Get position relative to canvas element
+    const relativeX = e.clientX - rect.left;
+    const relativeY = e.clientY - rect.top;
+    
+    // Account for CSS scaling (canvas internal size vs displayed size)
+    const cssScaleX = canvas.width / rect.width;
+    const cssScaleY = canvas.height / rect.height;
+    
+    // Convert to canvas coordinates (accounting for CSS scale and zoom)
+    const canvasX = (relativeX * cssScaleX) / zoomScale;
+    const canvasY = (relativeY * cssScaleY) / zoomScale;
     
     // Only show cursor if mouse is within canvas bounds
     if (canvasX >= 0 && canvasX <= canvas.width && canvasY >= 0 && canvasY <= canvas.height) {
