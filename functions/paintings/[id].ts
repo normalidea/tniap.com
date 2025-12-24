@@ -27,9 +27,8 @@ export async function onRequestGet(ctx: {
       return new Response('Painting not found', { status: 404 });
     }
 
-    // If requesting raw image (for og:image or direct image access)
-    const acceptHeader = ctx.request.headers.get('Accept') || '';
-    if (url.searchParams.get('raw') === 'true' || acceptHeader.includes('image/')) {
+    // Only serve raw image if explicitly requested with ?raw=true (for og:image)
+    if (url.searchParams.get('raw') === 'true') {
       return new Response(object.body, {
         headers: {
           'Content-Type': object.httpMetadata?.contentType || 'image/png',
@@ -40,7 +39,8 @@ export async function onRequestGet(ctx: {
 
     // Convert image to base64 for embedding
     const arrayBuffer = await object.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    const base64 = btoa(String.fromCharCode(...bytes));
     const imageDataUrl = `data:image/png;base64,${base64}`;
     const imageUrl = `${url.origin}${url.pathname}?raw=true`;
 
@@ -49,7 +49,7 @@ export async function onRequestGet(ctx: {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>${domain} 🖼️</title>
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
@@ -67,14 +67,22 @@ export async function onRequestGet(ctx: {
             padding: 0;
             box-sizing: border-box;
         }
+        html {
+            height: 100%;
+        }
         body {
             font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
             background: #c0c0c0;
+            padding: 20px;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
         }
         .container {
             background: #c0c0c0;
@@ -82,33 +90,61 @@ export async function onRequestGet(ctx: {
             padding: 40px;
             text-align: center;
             max-width: 800px;
+            width: 100%;
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
-        img {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #000;
-            background: #fff;
-            display: block;
-            margin: 0 auto 20px;
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
         }
-        .button {
+        .painting-container {
             background: #c0c0c0;
             border: 2px solid #808080;
-            padding: 12px 24px;
-            font-size: 14px;
+            padding: 10px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        img {
+            display: block;
+            border: 1px solid #000;
+            background: #fff;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            max-width: 100%;
+            height: auto;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            background: #c0c0c0;
+            border: 2px solid #808080;
+            padding: 8px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             text-decoration: none;
             color: #000;
             display: inline-block;
-            margin: 10px;
             transition: all 0.1s;
+            touch-action: manipulation;
         }
-        .button:hover {
+        @media (max-width: 768px) {
+            .action-btn {
+                padding: 12px;
+                min-height: 44px;
+                font-size: 13px;
+            }
+        }
+        .action-btn:hover {
             background: #d4d0c8;
         }
-        .button:active {
+        .action-btn:active {
             border: 2px solid #808080;
             background: #a0a0a0;
         }
@@ -116,9 +152,13 @@ export async function onRequestGet(ctx: {
 </head>
 <body>
     <div class="container">
-        <img src="${imageDataUrl}" alt="Shared painting">
-        <a href="${imageUrl}" download="painting-${id}.png" class="button">Download</a>
-        <a href="/" class="button">Create Your Own</a>
+        <div class="painting-container">
+            <img src="${imageDataUrl}" alt="Shared painting">
+        </div>
+        <div class="buttons">
+            <a href="${imageUrl}" download="painting-${id}.png" class="action-btn">Download</a>
+            <a href="/" class="action-btn">Create Your Own</a>
+        </div>
     </div>
 </body>
 </html>`;
