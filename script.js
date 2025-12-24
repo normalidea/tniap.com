@@ -27,6 +27,13 @@ if (apexDomain === 'tniap.com') {
   document.title = `${apexDomain} 🎨`;
 }
 
+// Update Open Graph meta tags for sharing
+const ogTitle = `${apexDomain} 🖼️`;
+const ogUrl = window.location.origin;
+document.querySelector('meta[property="og:title"]').setAttribute('content', ogTitle);
+document.querySelector('meta[property="og:url"]').setAttribute('content', ogUrl);
+document.querySelector('meta[name="twitter:title"]').setAttribute('content', ogTitle);
+
 // Set canvas size
 // Canvas internal resolution is always 761x761 for API compatibility
 // Visual size is scaled via CSS for responsive display
