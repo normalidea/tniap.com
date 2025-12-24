@@ -12,9 +12,6 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="tniap.com 🖼️">
     <meta name="twitter:description" content="Paint and share your artwork">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,25 +21,25 @@
                 <h3>Tools</h3>
                 <div class="tools">
                     <button class="tool-btn active" data-tool="brush" title="Brush">
-                        <span class="icon material-symbols-outlined">format_paint</span>
+                        <img src="icons/format_paint.svg" alt="Brush" class="icon">
                     </button>
                     <button class="tool-btn" data-tool="eraser" title="Eraser">
-                        <span class="icon material-symbols-outlined">ink_eraser</span>
+                        <img src="icons/ink_eraser.svg" alt="Eraser" class="icon">
                     </button>
                     <button class="tool-btn" data-tool="line" title="Line">
-                        <span class="icon material-symbols-outlined">show_chart</span>
+                        <img src="icons/show_chart.svg" alt="Line" class="icon">
                     </button>
                     <button class="tool-btn" data-tool="rectangle" title="Rectangle">
-                        <span class="icon material-symbols-outlined">square</span>
+                        <img src="icons/square.svg" alt="Rectangle" class="icon">
                     </button>
                     <button class="tool-btn" data-tool="circle" title="Circle">
-                        <span class="icon material-symbols-outlined">radio_button_unchecked</span>
+                        <img src="icons/radio_button_unchecked.svg" alt="Circle" class="icon">
                     </button>
                     <button class="tool-btn" data-tool="fill" title="Fill">
-                        <span class="icon material-symbols-outlined">format_color_fill</span>
+                        <img src="icons/format_color_fill.svg" alt="Fill" class="icon">
                     </button>
                     <button class="tool-btn" data-tool="pan" title="Pan">
-                        <span class="icon material-symbols-outlined">pan_tool_alt</span>
+                        <img src="icons/pan_tool_alt.svg" alt="Pan" class="icon">
                     </button>
                 </div>
             </div>
@@ -62,11 +59,11 @@
                 <h3>Zoom</h3>
                 <div class="zoom-controls">
                     <button id="zoomOutBtn" class="zoom-btn" title="Zoom Out">
-                        <span class="icon material-symbols-outlined">remove</span>
+                        <img src="icons/remove.svg" alt="Zoom Out" class="icon">
                     </button>
                     <input type="range" id="zoomSlider" min="25" max="400" value="100" step="5">
                     <button id="zoomInBtn" class="zoom-btn" title="Zoom In">
-                        <span class="icon material-symbols-outlined">add</span>
+                        <img src="icons/add.svg" alt="Zoom In" class="icon">
                     </button>
                 </div>
                 <span id="zoomDisplay">100%</span>
