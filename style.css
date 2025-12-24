@@ -138,11 +138,10 @@ body {
 
 .tool-btn .icon {
     display: block;
-    font-size: 24px;
-    line-height: 1;
     width: 24px;
     height: 24px;
     flex-shrink: 0;
+    object-fit: contain;
 }
 
 #brushSize {
@@ -215,8 +214,9 @@ body {
 }
 
 .zoom-btn .icon {
-    font-size: 16px;
-    line-height: 1;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
 }
 
 #zoomSlider {
@@ -383,11 +383,13 @@ body {
 }
 
 .cursor-indicator.fill::before {
-    content: 'format_color_fill';
-    font-family: 'Material Symbols Outlined';
-    font-size: 24px;
-    line-height: 1;
-    color: currentColor;
+    content: '';
+    width: 24px;
+    height: 24px;
+    background-image: url('icons/format_color_fill.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.8));
 }
 
