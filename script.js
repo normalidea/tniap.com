@@ -27,6 +27,13 @@ if (apexDomain === 'tniap.com') {
   document.title = `${apexDomain} 🎨`;
 }
 
+// Update Open Graph meta tags for sharing
+const ogTitle = `${apexDomain} 🖼️`;
+const ogUrl = window.location.origin;
+document.querySelector('meta[property="og:title"]').setAttribute('content', ogTitle);
+document.querySelector('meta[property="og:url"]').setAttribute('content', ogUrl);
+document.querySelector('meta[name="twitter:title"]').setAttribute('content', ogTitle);
+
 // Set canvas size
 // Canvas internal resolution is always 761x761 for API compatibility
 // Visual size is scaled via CSS for responsive display
@@ -422,23 +429,27 @@ function updateCursorIndicator() {
 }
 
 function getCanvasCoordinates(e) {
-    const rect = canvas.getBoundingClientRect();
+    // Get wrapper rect (which has the zoom transform applied)
+    const wrapperRect = canvasWrapper.getBoundingClientRect();
     const zoomScale = zoomLevel / 100;
     // Handle both mouse and touch events
     const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
     const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
     
-    // Get position relative to canvas element
-    const relativeX = clientX - rect.left;
-    const relativeY = clientY - rect.top;
+    // Get position relative to wrapper (which accounts for zoom transform)
+    const relativeX = clientX - wrapperRect.left;
+    const relativeY = clientY - wrapperRect.top;
     
-    // Account for CSS scaling (canvas internal size vs displayed size)
-    const cssScaleX = canvas.width / rect.width;
-    const cssScaleY = canvas.height / rect.height;
+    // Get the canvas's CSS size (before zoom transform)
+    // The canvas.style.width/height gives us the base size before zoom
+    const canvasCssWidth = parseFloat(canvas.style.width) || canvas.width;
+    const canvasCssHeight = parseFloat(canvas.style.height) || canvas.height;
     
-    // Convert to canvas coordinates (accounting for CSS scale and zoom)
-    const x = (relativeX * cssScaleX) / zoomScale;
-    const y = (relativeY * cssScaleY) / zoomScale;
+    // Convert to canvas coordinates
+    // Divide by zoomScale to get position in unscaled CSS space
+    // Then scale to internal canvas coordinates
+    const x = (relativeX / zoomScale) * (canvas.width / canvasCssWidth);
+    const y = (relativeY / zoomScale) * (canvas.height / canvasCssHeight);
     
     return { x, y };
 }
