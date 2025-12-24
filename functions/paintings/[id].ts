@@ -61,6 +61,7 @@ export async function onRequestGet(ctx: {
     <meta name="twitter:title" content="${domain} 🖼️">
     <meta name="twitter:description" content="View this shared painting">
     <meta name="twitter:image" content="${imageUrl}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />
     <style>
         * {
             margin: 0;
@@ -78,6 +79,7 @@ export async function onRequestGet(ctx: {
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
         @media (max-width: 768px) {
             body {
@@ -86,12 +88,11 @@ export async function onRequestGet(ctx: {
         }
         .container {
             background: #c0c0c0;
-            border: 2px solid #808080;
             padding: 40px;
             text-align: center;
             max-width: 800px;
             width: 100%;
-            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
         }
         @media (max-width: 768px) {
             .container {
@@ -100,14 +101,12 @@ export async function onRequestGet(ctx: {
         }
         .painting-container {
             background: #c0c0c0;
-            border: 2px solid #808080;
             padding: 10px;
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
         img {
             display: block;
-            border: 1px solid #000;
             background: #fff;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
@@ -115,38 +114,51 @@ export async function onRequestGet(ctx: {
             max-width: 100%;
             height: auto;
         }
-        .buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .action-btn {
+        .download-btn {
+            width: 100%;
             background: #c0c0c0;
             border: 2px solid #808080;
-            padding: 8px;
-            font-size: 11px;
-            font-weight: bold;
+            padding: 12px;
+            margin-top: 10px;
             cursor: pointer;
             text-decoration: none;
             color: #000;
-            display: inline-block;
-            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.1s;
             touch-action: manipulation;
+            font-size: 11px;
+            font-weight: bold;
+            font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
         }
         @media (max-width: 768px) {
-            .action-btn {
-                padding: 12px;
-                min-height: 44px;
+            .download-btn {
+                padding: 14px;
                 font-size: 13px;
             }
         }
-        .action-btn:hover {
+        .download-btn:hover {
             background: #d4d0c8;
         }
-        .action-btn:active {
+        .download-btn:active {
             border: 2px solid #808080;
             background: #a0a0a0;
+        }
+        .download-btn .icon {
+            display: block;
+            font-size: 20px;
+            line-height: 1;
+            width: 20px;
+            height: 20px;
+        }
+        @media (max-width: 768px) {
+            .download-btn .icon {
+                font-size: 24px;
+                width: 24px;
+                height: 24px;
+            }
         }
     </style>
 </head>
@@ -154,10 +166,10 @@ export async function onRequestGet(ctx: {
     <div class="container">
         <div class="painting-container">
             <img src="${imageDataUrl}" alt="Shared painting">
-        </div>
-        <div class="buttons">
-            <a href="${imageUrl}" download="painting-${id}.png" class="action-btn">Download</a>
-            <a href="/" class="action-btn">Create Your Own</a>
+            <a href="${imageUrl}" download="painting-${id}.png" class="download-btn" title="Download">
+                <span class="icon material-symbols-outlined">download</span>
+                <span>Download</span>
+            </a>
         </div>
     </div>
 </body>
@@ -173,4 +185,5 @@ export async function onRequestGet(ctx: {
     return new Response('Error retrieving painting', { status: 500 });
   }
 }
+
 
