@@ -2,6 +2,11 @@ export interface Env {
   CANVAS_BUCKET: R2Bucket;
 }
 
+// Normalize domain by removing www. prefix for consistency
+function normalizeDomain(hostname: string): string {
+  return hostname.replace(/^www\./, '');
+}
+
 export async function onRequestPost(ctx: {
   request: Request;
   env: Env;
@@ -76,8 +81,13 @@ export async function onRequestPost(ctx: {
     // Generate a unique ID for this canvas
     const canvasId = crypto.randomUUID();
 
-    // Upload to R2
-    await ctx.env.CANVAS_BUCKET.put(canvasId, canvasBlob, {
+    // Extract and normalize domain from request URL
+    const url = new URL(request.url);
+    const domain = normalizeDomain(url.hostname);
+    const r2Key = `${domain}/${canvasId}`;
+
+    // Upload to R2 with domain-prefixed path
+    await ctx.env.CANVAS_BUCKET.put(r2Key, canvasBlob, {
       httpMetadata: {
         contentType: 'image/png',
       },
