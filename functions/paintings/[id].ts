@@ -38,9 +38,16 @@ export async function onRequestGet(ctx: {
     }
 
     // Convert image to base64 for embedding
+    // Use a chunked approach to avoid call stack limits with large arrays
     const arrayBuffer = await object.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
-    const base64 = btoa(String.fromCharCode(...bytes));
+    let binary = '';
+    const chunkSize = 8192; // Process in 8KB chunks
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    const base64 = btoa(binary);
     const imageDataUrl = `data:image/png;base64,${base64}`;
     const imageUrl = `${url.origin}${url.pathname}?raw=true`;
 
@@ -131,7 +138,15 @@ export async function onRequestGet(ctx: {
     });
   } catch (error) {
     console.error('Error retrieving painting:', error);
-    return new Response('Error retrieving painting', { status: 500 });
+    // Log more details for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    return new Response(`Error retrieving painting: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
+      status: 500,
+      headers: { 'Content-Type': 'text/plain' }
+    });
   }
 }
 
