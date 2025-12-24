@@ -13,6 +13,9 @@ const zoomDisplay = document.getElementById('zoomDisplay');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 
+// Detect if device is touch-capable
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
 // Set canvas size
 // Canvas internal resolution is always 761x761 for API compatibility
 // Visual size is scaled via CSS for responsive display
@@ -269,6 +272,10 @@ let panStartScrollTop = 0;
 let panOffsetX = 0;
 let panOffsetY = 0;
 
+// Multi-touch tap tracking for undo/redo
+let multiTouchStartTime = 0;
+let multiTouchCount = 0;
+
 // Tool selection
 document.querySelectorAll('.tool-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -426,7 +433,7 @@ function getCanvasCoordinates(e) {
 }
 
 function updateCursorPosition(e) {
-    if (!cursorIndicator) return;
+    if (!cursorIndicator || isTouchDevice) return;
     
     // Check if mouse is actually over the canvas
     const rect = canvas.getBoundingClientRect();
@@ -459,6 +466,8 @@ function updateCursorPosition(e) {
 
 // Show cursor indicator when mouse enters canvas
 canvas.addEventListener('mouseenter', (e) => {
+    if (isTouchDevice) return;
+    
     if (currentTool === 'brush' || currentTool === 'eraser' || 
         currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
         cursorIndicator.classList.add('visible');
@@ -471,7 +480,9 @@ canvas.addEventListener('mouseenter', (e) => {
 
 // Hide cursor indicator when mouse leaves canvas
 canvas.addEventListener('mouseleave', (e) => {
-    cursorIndicator.classList.remove('visible');
+    if (!isTouchDevice) {
+        cursorIndicator.classList.remove('visible');
+    }
     isDrawing = false;
     if (isPanning) {
         stopPan();
@@ -892,17 +903,24 @@ canvas.addEventListener('mouseup', (e) => {
 // Touch events
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault(); // Prevent scrolling and zooming
+    
     if (e.touches.length === 1) {
         // Single touch - handle drawing
         handleDrawingStart(e);
-    } else if (e.touches.length === 2) {
-        // Two touches - could be pan/zoom, but for now just prevent default
+        // Reset multi-touch tracking
+        multiTouchStartTime = 0;
+        multiTouchCount = 0;
+    } else if (e.touches.length === 2 || e.touches.length === 3) {
+        // Multi-touch - track for undo/redo gestures
+        multiTouchStartTime = Date.now();
+        multiTouchCount = e.touches.length;
         e.preventDefault();
     }
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault(); // Prevent scrolling
+    
     if (e.touches.length === 1 && isDrawing) {
         // Handle drawing movement
         const touch = e.touches[0];
@@ -912,9 +930,9 @@ canvas.addEventListener('touchmove', (e) => {
             touches: e.touches
         };
         
-        // Update cursor indicator position
-        if (currentTool === 'brush' || currentTool === 'eraser' || 
-            currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle') {
+        // Update cursor indicator position (only on non-touch devices)
+        if (!isTouchDevice && (currentTool === 'brush' || currentTool === 'eraser' || 
+            currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle')) {
             updateCursorPosition(mouseEvent);
         }
         
@@ -965,6 +983,27 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
+    
+    // Check for multi-touch tap gestures (undo/redo)
+    if (e.touches.length === 0 && multiTouchStartTime > 0) {
+        const timeElapsed = Date.now() - multiTouchStartTime;
+        const isQuickTap = timeElapsed < 800; // Less than 800ms
+        
+        if (isQuickTap) {
+            if (multiTouchCount === 2) {
+                // Two finger tap = undo
+                undo();
+            } else if (multiTouchCount === 3) {
+                // Three finger tap = redo
+                redo();
+            }
+        }
+        
+        // Reset multi-touch tracking
+        multiTouchStartTime = 0;
+        multiTouchCount = 0;
+    }
+    
     if (e.touches.length === 0) {
         // All touches ended
         const lastTouch = e.changedTouches[0];
@@ -1135,6 +1174,13 @@ shareModal.addEventListener('click', (e) => {
     }
 });
 
-// Initialize cursor indicator
-updateCursorIndicator();
+// Initialize cursor indicator (only on non-touch devices)
+if (!isTouchDevice) {
+    updateCursorIndicator();
+} else {
+    // Hide cursor indicator on touch devices
+    if (cursorIndicator) {
+        cursorIndicator.style.display = 'none';
+    }
+}
 
