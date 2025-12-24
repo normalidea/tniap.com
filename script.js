@@ -16,6 +16,17 @@ const zoomOutBtn = document.getElementById('zoomOutBtn');
 // Detect if device is touch-capable
 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+// Set page title to use apex domain with paint emoji
+function normalizeDomain(hostname) {
+  return hostname.replace(/^www\./, '');
+}
+const apexDomain = normalizeDomain(window.location.hostname);
+if (apexDomain === 'tniap.com') {
+  document.title = 'tniap 🪞 paint';
+} else {
+  document.title = `${apexDomain} 🎨`;
+}
+
 // Set canvas size
 // Canvas internal resolution is always 761x761 for API compatibility
 // Visual size is scaled via CSS for responsive display
