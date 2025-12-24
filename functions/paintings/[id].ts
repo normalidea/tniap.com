@@ -61,7 +61,6 @@ export async function onRequestGet(ctx: {
     <meta name="twitter:title" content="${domain} 🖼️">
     <meta name="twitter:description" content="View this shared painting">
     <meta name="twitter:image" content="${imageUrl}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />
     <style>
         * {
             margin: 0;
@@ -114,62 +113,12 @@ export async function onRequestGet(ctx: {
             max-width: 100%;
             height: auto;
         }
-        .download-btn {
-            width: 100%;
-            background: #c0c0c0;
-            border: 2px solid #808080;
-            padding: 12px;
-            margin-top: 10px;
-            cursor: pointer;
-            text-decoration: none;
-            color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.1s;
-            touch-action: manipulation;
-            font-size: 11px;
-            font-weight: bold;
-            font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
-        }
-        @media (max-width: 768px) {
-            .download-btn {
-                padding: 14px;
-                font-size: 13px;
-            }
-        }
-        .download-btn:hover {
-            background: #d4d0c8;
-        }
-        .download-btn:active {
-            border: 2px solid #808080;
-            background: #a0a0a0;
-        }
-        .download-btn .icon {
-            display: block;
-            font-size: 20px;
-            line-height: 1;
-            width: 20px;
-            height: 20px;
-        }
-        @media (max-width: 768px) {
-            .download-btn .icon {
-                font-size: 24px;
-                width: 24px;
-                height: 24px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="painting-container">
             <img src="${imageDataUrl}" alt="Shared painting">
-            <a href="${imageUrl}" download="painting-${id}.png" class="download-btn" title="Download">
-                <span class="icon material-symbols-outlined">download</span>
-                <span>Download</span>
-            </a>
         </div>
     </div>
 </body>
