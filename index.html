@@ -74,6 +74,10 @@
                 <button id="saveBtn" class="action-btn">Save</button>
                 <button id="shareBtn" class="action-btn">Share</button>
             </div>
+            
+            <div class="tool-group" id="authGroup" style="display: none;">
+                <button id="logoutBtn" class="action-btn">Sign Out</button>
+            </div>
         </div>
         
         <div class="canvas-container">
@@ -105,6 +109,23 @@
                     </div>
                     <div class="modal-footer">
                         <button id="shareModalClose" class="modal-btn modal-btn-primary">Close</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Auth Modal -->
+            <div id="authModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p id="authStatus">Please sign in with Google to continue.</p>
+                        <div id="authError" style="display: none; color: #d00; margin-top: 10px; font-size: 11px;"></div>
+                        <div id="authUserInfo" style="display: none; margin-top: 10px;">
+                            <p style="font-size: 11px;">Signed in as: <span id="authEmail"></span></p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="authLoginBtn" class="modal-btn modal-btn-primary">Sign in with Google</button>
+                        <button id="authLogoutBtn" class="modal-btn" style="display: none;">Sign Out</button>
+                        <button id="authModalClose" class="modal-btn" style="display: none;">Close</button>
                     </div>
                 </div>
             </div>

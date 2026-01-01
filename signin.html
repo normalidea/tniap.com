@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - tniap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
+            background: #c0c0c0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .signin-container {
+            background: #c0c0c0;
+            border: 2px solid #808080;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+        p {
+            font-size: 14px;
+            margin-bottom: 30px;
+            color: #000;
+        }
+        .error-message {
+            background: #ffcccc;
+            border: 2px solid #ff0000;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #000;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .button {
+            background: #c0c0c0;
+            border: 2px solid #808080;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            color: #000;
+            display: inline-block;
+            transition: all 0.1s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .button:hover {
+            background: #d4d0c8;
+        }
+        .button:active {
+            border: 2px solid #808080;
+            background: #a0a0a0;
+        }
+        .button.primary {
+            background: #4285f4;
+            color: #fff;
+            border-color: #4285f4;
+        }
+        .button.primary:hover {
+            background: #357ae8;
+        }
+        .button.primary:active {
+            background: #2a5fd6;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #000;
+        }
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="signin-container">
+        <h1 id="signinTitle">🎨</h1>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <button id="signInBtn" class="button primary">Sign in with Google</button>
+        
+        <div id="loading" class="loading">Redirecting to Google...</div>
+    </div>
+
+    <script>
+        // Set page title with apex domain
+        function normalizeDomain(hostname) {
+            return hostname.replace(/^www\./, '');
+        }
+        const apexDomain = normalizeDomain(window.location.hostname);
+        if (apexDomain !== 'tniap.com') {
+            document.getElementById('signinTitle').textContent = `${apexDomain} 🎨`;
+        }
+        
+        // Check if user is already authenticated
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    // Already signed in, redirect to home
+                    window.location.href = '/';
+                    return;
+                }
+            } catch (error) {
+                console.error('Failed to check auth status:', error);
+            }
+        }
+
+        // Handle URL parameters for errors
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const email = urlParams.get('email');
+
+        if (error === 'not_allowlisted') {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = `Email ${email || ''} is not on the allowlist. Please contact the administrator.`;
+            errorMsg.classList.add('show');
+        } else if (error === 'auth_failed') {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = 'Authentication failed. Please try again.';
+            errorMsg.classList.add('show');
+        }
+
+        // Sign in button handler
+        const signInBtn = document.getElementById('signInBtn');
+        const loading = document.getElementById('loading');
+
+        signInBtn.addEventListener('click', () => {
+            signInBtn.style.display = 'none';
+            loading.classList.add('show');
+            // Redirect to Google OAuth
+            window.location.href = '/api/auth/google';
+        });
+
+        // Check auth status on load
+        checkAuthStatus();
+    </script>
+</body>
+</html>
+

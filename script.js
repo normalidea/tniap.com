@@ -34,6 +34,153 @@ document.querySelector('meta[property="og:title"]').setAttribute('content', ogTi
 document.querySelector('meta[property="og:url"]').setAttribute('content', ogUrl);
 document.querySelector('meta[name="twitter:title"]').setAttribute('content', ogTitle);
 
+// Authentication (only for non-tniap.com domains)
+const requiresAuth = apexDomain !== 'tniap.com';
+let authState = { authenticated: false, requiresAuth: false };
+
+// Auth UI elements
+const authModal = document.getElementById('authModal');
+const authStatus = document.getElementById('authStatus');
+const authError = document.getElementById('authError');
+const authUserInfo = document.getElementById('authUserInfo');
+const authEmail = document.getElementById('authEmail');
+const authLoginBtn = document.getElementById('authLoginBtn');
+const authLogoutBtn = document.getElementById('authLogoutBtn');
+const authModalClose = document.getElementById('authModalClose');
+const authGroup = document.getElementById('authGroup');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// Check auth status
+async function checkAuthStatus() {
+  if (!requiresAuth) {
+    authState = { authenticated: false, requiresAuth: false };
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/auth/status');
+    const data = await response.json();
+    authState = data;
+    
+    if (data.authenticated) {
+      // User is authenticated
+      if (authUserInfo) {
+        authUserInfo.style.display = 'block';
+        authEmail.textContent = data.email;
+      }
+      if (authLoginBtn) authLoginBtn.style.display = 'none';
+      if (authLogoutBtn) authLogoutBtn.style.display = 'block';
+      if (authModalClose) authModalClose.style.display = 'block';
+      if (authGroup) authGroup.style.display = 'block';
+    } else {
+      // User is not authenticated - redirect to sign-in page
+      // Only redirect if we're not already on the sign-in page
+      if (window.location.pathname !== '/signin.html') {
+        window.location.href = '/signin.html';
+        return;
+      }
+      // If on sign-in page, show login UI
+      if (authUserInfo) authUserInfo.style.display = 'none';
+      if (authLoginBtn) authLoginBtn.style.display = 'block';
+      if (authLogoutBtn) authLogoutBtn.style.display = 'none';
+      if (authModalClose) authModalClose.style.display = 'none';
+      if (authGroup) authGroup.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('Failed to check auth status:', error);
+    // On error, redirect to sign-in if not already there
+    if (window.location.pathname !== '/signin.html') {
+      window.location.href = '/signin.html';
+    }
+  }
+}
+
+// Handle auth login
+if (authLoginBtn) {
+  authLoginBtn.addEventListener('click', () => {
+    window.location.href = '/api/auth/google';
+  });
+}
+
+// Handle auth logout (from modal)
+if (authLogoutBtn) {
+  authLogoutBtn.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      await checkAuthStatus();
+      if (authModal) authModal.style.display = 'none';
+      // Reload to clear any cached state
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to logout:', error);
+    }
+  });
+}
+
+// Handle logout button (from toolbar)
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      // Redirect to sign-in page after logout
+      window.location.href = '/signin.html';
+    } catch (error) {
+      console.error('Failed to logout:', error);
+    }
+  });
+}
+
+// Close auth modal
+if (authModalClose) {
+  authModalClose.addEventListener('click', () => {
+    if (authModal) authModal.style.display = 'none';
+  });
+}
+
+// Handle URL params for auth errors/success
+const urlParams = new URLSearchParams(window.location.search);
+const authParam = urlParams.get('auth');
+const errorParam = urlParams.get('error');
+const emailParam = urlParams.get('email');
+
+if (requiresAuth) {
+  // Check auth status on load
+  checkAuthStatus().then(() => {
+    // If authenticated and on sign-in page, redirect to home
+    if (authState.authenticated && window.location.pathname === '/signin.html') {
+      window.location.href = '/';
+      return;
+    }
+    
+    // Handle auth success - clean URL and stay on page
+    if (authParam === 'success') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (authModal) authModal.style.display = 'none';
+    }
+    
+    // If not authenticated, checkAuthStatus will redirect to sign-in
+    // Error handling is done on the sign-in page itself
+  });
+}
+
+// Update share function to check auth before sharing
+const originalShareFunction = shareBtn?.onclick;
+if (shareBtn && requiresAuth) {
+  shareBtn.addEventListener('click', async (e) => {
+    if (!authState.authenticated) {
+      e.preventDefault();
+      if (authModal) authModal.style.display = 'flex';
+      if (authError) {
+        authError.style.display = 'block';
+        authError.textContent = 'Please sign in to share paintings.';
+      }
+      return;
+    }
+    // If authenticated, proceed with original share logic
+    // (the existing share code will handle it)
+  });
+}
+
 // Set canvas size
 // Canvas internal resolution is always 761x761 for API compatibility
 // Visual size is scaled via CSS for responsive display

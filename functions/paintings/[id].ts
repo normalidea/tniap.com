@@ -1,5 +1,6 @@
 export interface Env {
   CANVAS_BUCKET: R2Bucket;
+  TNIAP_CONFIG: KVNamespace;
 }
 
 // Normalize domain by removing www. prefix for consistency

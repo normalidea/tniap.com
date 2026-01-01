@@ -7,3 +7,8 @@ binding = "CANVAS_BUCKET"
 bucket_name = "tniap-canvas-storage"
 preview_bucket_name = "tniap-canvas-storage-preview"
 
+[[kv_namespaces]]
+binding = "TNIAP_CONFIG"
+id = "1b4d5be511df4321881ecc8ea2d86558"
+preview_id = "68730b010c484b60a765654c81745005"
+

@@ -1,11 +1,4 @@
-export interface Env {
-  CANVAS_BUCKET: R2Bucket;
-}
-
-// Normalize domain by removing www. prefix for consistency
-function normalizeDomain(hostname: string): string {
-  return hostname.replace(/^www\./, '');
-}
+import { Env, requiresAuth, getSession, normalizeDomain } from '../utils/auth';
 
 export async function onRequestPost(ctx: {
   request: Request;
@@ -14,6 +7,17 @@ export async function onRequestPost(ctx: {
   const { request, env } = ctx;
 
   try {
+    // Check authentication for non-tniap.com domains
+    const url = new URL(request.url);
+    if (requiresAuth(url.hostname)) {
+      const session = getSession(request);
+      if (!session) {
+        return new Response(JSON.stringify({ error: 'Authentication required' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
     // Get the canvas image data from the request body
     // In Cloudflare Pages Functions, ctx.request is a proper Request object
     const formData = await request.formData();
@@ -82,7 +86,6 @@ export async function onRequestPost(ctx: {
     const canvasId = crypto.randomUUID();
 
     // Extract and normalize domain from request URL
-    const url = new URL(request.url);
     const domain = normalizeDomain(url.hostname);
     const r2Key = `${domain}/${canvasId}`;
 
