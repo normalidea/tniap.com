@@ -13,6 +13,52 @@
     <meta name="twitter:title" content="tniap.com 🖼️">
     <meta name="twitter:description" content="Paint and share your artwork">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Hide content by default, show after auth check */
+        body:not(.auth-checked) .app-container {
+            display: none;
+        }
+    </style>
+    <script>
+        // Immediate auth check before page renders
+        (function() {
+            function normalizeDomain(hostname) {
+                return hostname.replace(/^www\./, '');
+            }
+            const apexDomain = normalizeDomain(window.location.hostname);
+            const requiresAuth = apexDomain !== 'tniap.com';
+            const pathname = window.location.pathname;
+            
+            // Skip auth check for shared paintings
+            if (pathname.startsWith('/paintings/')) {
+                document.body.classList.add('auth-checked');
+                return;
+            }
+            
+            // If auth not required, show content immediately
+            if (!requiresAuth) {
+                document.body.classList.add('auth-checked');
+                return;
+            }
+            
+            // Check auth status immediately
+            fetch('/api/auth/status')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        // Show content
+                        document.body.classList.add('auth-checked');
+                    } else {
+                        // Redirect immediately
+                        window.location.href = '/signin.html';
+                    }
+                })
+                .catch(() => {
+                    // On error, redirect to sign-in
+                    window.location.href = '/signin.html';
+                });
+        })();
+    </script>
 </head>
 <body>
     <div class="app-container">
