@@ -14,13 +14,13 @@
     <meta name="twitter:description" content="Paint and share your artwork">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Hide content by default, show after auth check */
-        body:not(.auth-checked) .app-container {
+        /* Hide content by default for domains that require auth, show after auth check */
+        body:not(.auth-checked):not(.no-auth-required) .app-container {
             display: none;
         }
-        /* Show content immediately for tniap.com (no auth required) */
-        body.tniap-com .app-container {
-            display: block;
+        /* Show content immediately if no auth required class is on html element */
+        html.no-auth-required .app-container {
+            display: block !important;
         }
     </style>
     <script>
@@ -57,14 +57,18 @@
                 return;
             }
             
-            // If auth not required, show content immediately
+            // If auth not required, mark body immediately so content shows
             if (!requiresAuth) {
-                // Add class to body for CSS and show content
+                // Add class as soon as body exists
                 if (document.body) {
-                    document.body.classList.add('tniap-com', 'auth-checked');
+                    document.body.classList.add('no-auth-required', 'auth-checked');
                 } else {
+                    // Use a more immediate approach - add to documentElement
+                    document.documentElement.classList.add('no-auth-required');
                     document.addEventListener('DOMContentLoaded', () => {
-                        document.body.classList.add('tniap-com', 'auth-checked');
+                        if (document.body) {
+                            document.body.classList.add('no-auth-required', 'auth-checked');
+                        }
                     });
                 }
                 return;
