@@ -110,6 +110,13 @@
             return hostname.replace(/^www\./, '');
         }
         const apexDomain = normalizeDomain(window.location.hostname);
+        // Set page title
+        if (apexDomain === 'tniap.com') {
+            document.title = 'Sign In - tniap';
+        } else {
+            document.title = `Sign In - ${apexDomain}`;
+        }
+        // Set heading text
         if (apexDomain !== 'tniap.com') {
             document.getElementById('signinTitle').textContent = `${apexDomain} 🎨`;
         }

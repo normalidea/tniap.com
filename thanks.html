@@ -42,11 +42,18 @@
     </div>
 
     <script>
-        // Set domain in message
+        // Set domain in message and title
         function normalizeDomain(hostname) {
             return hostname.replace(/^www\./, '');
         }
         const apexDomain = normalizeDomain(window.location.hostname);
+        // Set page title
+        if (apexDomain === 'tniap.com') {
+            document.title = 'Thanks for visiting';
+        } else {
+            document.title = `Thanks for visiting ${apexDomain}`;
+        }
+        // Set heading text
         if (apexDomain !== 'tniap.com') {
             document.getElementById('thanksMessage').textContent = `Thanks for visiting ${apexDomain}`;
         }
