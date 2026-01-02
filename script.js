@@ -74,8 +74,9 @@ async function checkAuthStatus() {
       if (authGroup) authGroup.style.display = 'block';
     } else {
       // User is not authenticated - redirect to sign-in page
-      // Only redirect if we're not already on the sign-in page
-      if (window.location.pathname !== '/signin.html') {
+      // Skip redirect if viewing a shared painting or already on sign-in page
+      const pathname = window.location.pathname;
+      if (pathname !== '/signin.html' && !pathname.startsWith('/paintings/')) {
         window.location.href = '/signin.html';
         return;
       }
@@ -88,8 +89,9 @@ async function checkAuthStatus() {
     }
   } catch (error) {
     console.error('Failed to check auth status:', error);
-    // On error, redirect to sign-in if not already there
-    if (window.location.pathname !== '/signin.html') {
+    // On error, redirect to sign-in if not already there or viewing a painting
+    const pathname = window.location.pathname;
+    if (pathname !== '/signin.html' && !pathname.startsWith('/paintings/')) {
       window.location.href = '/signin.html';
     }
   }
