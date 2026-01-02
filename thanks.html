@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanks for visiting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
+            background: #c0c0c0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #c0c0c0;
+            border: 2px solid #808080;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="thanksMessage">Thanks for visiting</h1>
+        <p style="font-size: 24px; margin-top: 20px;">🎨</p>
+    </div>
+
+    <script>
+        // Set domain in message
+        function normalizeDomain(hostname) {
+            return hostname.replace(/^www\./, '');
+        }
+        const apexDomain = normalizeDomain(window.location.hostname);
+        if (apexDomain !== 'tniap.com') {
+            document.getElementById('thanksMessage').textContent = `Thanks for visiting ${apexDomain}`;
+        }
+    </script>
+</body>
+</html>
+

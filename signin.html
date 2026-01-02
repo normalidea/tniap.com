@@ -133,13 +133,8 @@
         // Handle URL parameters for errors
         const urlParams = new URLSearchParams(window.location.search);
         const error = urlParams.get('error');
-        const email = urlParams.get('email');
 
-        if (error === 'not_allowlisted') {
-            const errorMsg = document.getElementById('errorMessage');
-            errorMsg.textContent = `Email ${email || ''} is not on the allowlist. Please contact the administrator.`;
-            errorMsg.classList.add('show');
-        } else if (error === 'auth_failed') {
+        if (error === 'auth_failed') {
             const errorMsg = document.getElementById('errorMessage');
             errorMsg.textContent = 'Authentication failed. Please try again.';
             errorMsg.classList.add('show');

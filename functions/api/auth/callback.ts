@@ -68,7 +68,7 @@ export async function onRequestGet(ctx: {
     const isAllowlisted = await isEmailAllowlisted(userInfo.email, env);
     
     if (!isAllowlisted) {
-      return Response.redirect(`${url.origin}/signin.html?error=not_allowlisted&email=${encodeURIComponent(userInfo.email)}`, 302);
+      return Response.redirect(`${url.origin}/thanks.html`, 302);
     }
 
     // Create session
