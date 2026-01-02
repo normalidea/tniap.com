@@ -18,6 +18,10 @@
         body:not(.auth-checked) .app-container {
             display: none;
         }
+        /* Show content immediately for tniap.com (no auth required) */
+        body.tniap-com .app-container {
+            display: block;
+        }
     </style>
     <script>
         // Immediate auth check before page renders
@@ -29,15 +33,40 @@
             const requiresAuth = apexDomain !== 'tniap.com';
             const pathname = window.location.pathname;
             
+            // Set page title immediately
+            if (apexDomain === 'tniap.com') {
+                document.title = 'tniap 🪞 paint';
+            } else {
+                document.title = `${apexDomain} 🎨`;
+            }
+            
+            function showContent() {
+                // Wait for body to exist, then add class
+                if (document.body) {
+                    document.body.classList.add('auth-checked');
+                } else {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        document.body.classList.add('auth-checked');
+                    });
+                }
+            }
+            
             // Skip auth check for shared paintings
             if (pathname.startsWith('/paintings/')) {
-                document.body.classList.add('auth-checked');
+                showContent();
                 return;
             }
             
             // If auth not required, show content immediately
             if (!requiresAuth) {
-                document.body.classList.add('auth-checked');
+                // Add class to body for CSS and show content
+                if (document.body) {
+                    document.body.classList.add('tniap-com', 'auth-checked');
+                } else {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        document.body.classList.add('tniap-com', 'auth-checked');
+                    });
+                }
                 return;
             }
             
@@ -47,7 +76,7 @@
                 .then(data => {
                     if (data.authenticated) {
                         // Show content
-                        document.body.classList.add('auth-checked');
+                        showContent();
                     } else {
                         // Redirect immediately
                         window.location.href = '/signin.html';
